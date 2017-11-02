@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ansi"/>
+    <meta charset="ansi" />
+    <!--charset="utf-8"-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>显示</title>
+	<link rel="stylesheet" type="text/css" href="./assets/gojs/DataInspector.css" />	
+    <script src="./assets/gojs/go-debug.js"></script>
+    <script src="./assets/jquery-1.10.2.min.js"></script>
+	<script src="./assets/gojs/DataInspector.js"></script>
+	<script src="./assets/dogojs.js"></script>
+	
+
+</head>
+<body>
+	<div id="sample">
+		<!--myDiagramDiv 流程图显示  myPaletteDiv 右侧 -->
+		<div style="width:100%; white-space:nowrap;">
+			<span style="display: inline-block; vertical-align: top; padding: 5px; width:80%">
+				<div id="myDiagramDiv" style="border: solid 1px gray; height: 720px">
+				</div>
+            </span>
+		</div>
+		<!--urlOfImages应该替换成实际mvc action-->
+		<input type="hidden" id="urlOfImages" value="./assets/images/">
+		
+		<button id="SaveButton" onclick="save()">保存</button>
+		<button onclick="load()">加载</button>
+		<textarea id="mySavedModel" style="width:100%;height:300px">
+		</textarea>
+
+		<script id="init_js">
+			$(function(){
+				init(2);//非编辑
+			})
+		</script>
+</div>
+
+
+</body>
+</html>
+

@@ -1,0 +1,363 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>物料平衡流程图-编辑</title>
+    <meta name="description" content="Nodes with varying lists of ports on each of four sides." />
+    <!-- Copyright 1998-2017 by Northwoods Software Corporation. -->
+    <meta charset="UTF-8">
+    <script src="go.js"></script>
+    <!--<link href="../assets/css/goSamples.css" rel="stylesheet" type="text/css" />  <!-- you don't need to use this -->
+    <!--script src="goSamples.js"></!--script -->  <!-- this is only for the GoJS Samples framework-->
+    <script src="../assets/jquery/jquery.min.js"></script>
+    <script id="code">
+  function init() {
+    //if (window.goSamples) goSamples();  // init for these samples -- you don't need to call this
+    var $ = go.GraphObject.make;  //for conciseness in defining node templates
+
+    myDiagram =
+      $(go.Diagram, "myDiagramDiv",  //Diagram refers to its DIV HTML element by id
+        { initialContentAlignment: go.Spot.Center, "undoManager.isEnabled": true,isEnabled: true,
+            allowZoom: true,
+            allowMove: false,
+            allowLink: false,
+            allowRelink: false,
+            allowResize: false,
+            allowTextEdit: false,
+            allowDrop: false,  // must be true to accept drops from the Palette
+        });
+
+    // when the document is modified, add a "*" to the title and enable the "Save" button
+    myDiagram.addDiagramListener("Modified", function(e) {
+      var button = document.getElementById("SaveButton");
+      if (button) button.disabled = !myDiagram.isModified;
+      var idx = document.title.indexOf("*");
+      if (myDiagram.isModified) {
+        if (idx < 0) document.title += "*";
+      } else {
+        if (idx >= 0) document.title = document.title.substr(0, idx);
+      }
+    });
+
+    // To simplify this code we define a function for creating a context menu button:
+    function makeButton(text, action, visiblePredicate) {
+      return $("ContextMenuButton",
+               $(go.TextBlock, text),
+               { click: action },
+               // don't bother with binding GraphObject.visible if there's no predicate
+               visiblePredicate ? new go.Binding("visible", "", visiblePredicate).ofObject() : {});
+    }
+
+    var nodeMenu =  // context menu for each Node
+      $(go.Adornment, "Vertical"
+        //,
+        //makeButton("c复制",
+        //           function(e, obj) { e.diagram.commandHandler.copySelection(); }),
+      );
+
+    var portSize = new go.Size(6, 6);//端口大小
+	// 端口菜单
+    var portMenu =  // context menu for each port
+      $(go.Adornment, "Vertical"
+        //,
+        //makeButton("移除端口",
+        //           // in the click event handler, the obj.part is the Adornment;
+        //           // its adornedObject is the port
+        //           function (e, obj) { removePort(obj.part.adornedObject); }),
+      );
+
+    // the node template
+    // includes a panel on each side with an itemArray of panels containing ports
+   // myDiagram.nodeTemplate = makeNodeTempalte("green");
+	// 默认模板应该是创建位号
+
+
+    myDiagram.nodeTemplate =
+      $(go.Node, "Auto",
+      { locationObjectName: "BODY",
+          locationSpot: go.Spot.Center,
+          selectionObjectName: "BODY",
+          contextMenu: nodeMenu
+        , doubleClick: function (e, node) {
+            alert('双击将显示趋势图：' + node.part.data.text);
+        },
+      },
+      new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+      { // this tooltip Adornment is shared by all nodes
+          toolTip:
+            $(go.Adornment, "Auto",
+              $(go.Shape, { fill: "#FFFFCC" }),
+              $(go.TextBlock, { margin: 4 },  // the tooltip shows the result of calling nodeInfo(data)
+                new go.Binding("text", "", function(d) { var str = d.name;return str;})
+            ))
+      },
+      // the body
+      $(go.Panel, "Horizontal",
+        {stretch: go.GraphObject.Fill,name:"BODY"},
+          $(go.Panel,"Auto",{height:15,width:40},
+              $(go.Shape, "Rectangle",{ fill: "gray", stroke: null, strokeWidth: 0 }),
+              $(go.TextBlock,{ margin: 1,textAlign: "left", font: "12px  Segoe UI,sans-serif", stroke: "white", editable: false },
+                  new go.Binding("text", "name").makeTwoWay())),
+          $(go.Panel,"Auto",{height:15,width:50},
+              $(go.Shape, "Rectangle",{ fill: "black", stroke: null, strokeWidth: 0 }),
+              $(go.TextBlock,{ margin: 1, textAlign: "left", font: "12px  Segoe UI,sans-serif", stroke: "white", editable: false
+              },
+                  new go.Binding("text", "info").makeTwoWay()))
+      )  // end Auto Panel body
+    );  // end Node
+    myDiagram.nodeTemplateMap.add("dataTag",
+        $(go.Node, "Auto",
+        { locationObjectName: "BODY",
+            locationSpot: go.Spot.Center,
+            selectionObjectName: "BODY",
+            contextMenu: nodeMenu
+		  , doubleClick: function (e, node) {
+		      alert('双击将显示趋势图：' + node.part.data.text);
+		  },
+        },
+        new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+        { // this tooltip Adornment is shared by all nodes
+            toolTip:
+              $(go.Adornment, "Auto",
+                $(go.Shape, { fill: "#FFFFCC" }),
+                $(go.TextBlock, { margin: 4 },  // the tooltip shows the result of calling nodeInfo(data)
+                  new go.Binding("text", "", function(d) { var str = d.name;return str;})
+              ))
+        },
+        // the body
+        $(go.Panel, "Horizontal",
+          {stretch: go.GraphObject.Fill,name:"BODY"},
+			$(go.Panel,"Auto",{height:15,width:40},
+				$(go.Shape, "Rectangle",{ fill: "gray", stroke: null, strokeWidth: 0 }),
+				$(go.TextBlock,{ margin: 1,textAlign: "left", font: "12px  Segoe UI,sans-serif", stroke: "white", editable: false },
+					new go.Binding("text", "name").makeTwoWay())),
+			$(go.Panel,"Auto",{height:15,width:50},
+				$(go.Shape, "Rectangle",{ fill: "black", stroke: null, strokeWidth: 0 }),
+				$(go.TextBlock,{ margin: 1, textAlign: "right", font: "12px  Segoe UI,sans-serif", stroke: "white", editable: false
+				},
+					new go.Binding("text", "info").makeTwoWay()))
+        )  // end Auto Panel body
+      )// end Node
+    );
+	//myDiagram.nodeTemplateMap.add("Abs",makeNodeTempalte("red"));// 添加吸收部分
+	//myDiagram.nodeTemplateMap.add("Reg",makeNodeTempalte("green"));// 添加再生部分
+    myDiagram.nodeTemplateMap.add("Comment",
+        $(go.Node, "Auto",
+        {
+          locationObjectName: "BODY",
+          locationSpot: go.Spot.Center,
+          selectionObjectName: "BODY",
+          contextMenu: nodeMenu
+        },
+        new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+        // the body
+		$(go.Panel,"Auto",{height:15,width:80},
+		    $(go.Shape, "Rectangle",{ fill: "gray", stroke: null, strokeWidth: 0 }),
+			$(go.TextBlock,{ margin: 1,textAlign: "center", font: "12px  Segoe UI,sans-serif", stroke: "gray", editable: true,text:"100" },
+					new go.Binding("text", "text").makeTwoWay())
+        )
+		// end Auto Panel body
+      )  // end Node
+	);
+
+	// 添加显示流程图的node
+	myDiagram.nodeTemplateMap.add("flowchart",
+        $(go.Node, "Auto",
+            $(go.Panel, "Auto",
+				$(go.Picture,
+					{
+						name: "PICTURE",
+						source:"./images/炼油四部.svg"
+						,width: 800
+						//,height: 700
+					},
+                    new go.Binding("source", "figure").makeTwoWay()
+				)
+			)
+        ));
+
+	// 整体监听双击
+	/* myDiagram.addDiagramListener("ObjectDoubleClicked", function (e, obj) {
+        var part = e.subject.part;
+        if (part instanceof go.Node)//节点
+        {
+            alert('diag evetn:a node double clicked:' + part.data.text);
+        }
+
+        if (part instanceof go.Link)//节点
+        {
+            alert('diag evetn:a link double clicked:' + part.data.text);
+        }
+    }); */
+
+    // an orthogonal link template, reshapable and relinkable
+    myDiagram.linkTemplate =
+      $(go.Link,  // defined below
+        {
+          routing: go.Link.AvoidsNodes,
+          corner: 4,
+          curve: go.Link.JumpGap,
+          reshapable: true,
+          resegmentable: true,
+          relinkableFrom: true,
+          relinkableTo: true
+        },
+        new go.Binding("points").makeTwoWay(),
+        $(go.Shape, { stroke: "gray", strokeWidth: 2 }),
+        $(go.Shape, { stroke: "gray", fill: "gray", toArrow: "Standard" })//添加箭头
+      );
+
+    // support double-clicking in the background to add a copy of this data as a node
+    myDiagram.toolManager.clickCreatingTool.archetypeNodeData = {
+      category:"dataTag",
+      name: "XXXXxxxxx系统",
+      info:"0.9 t/h",
+	  dataSource:"1-29"
+    };
+
+    myDiagram.contextMenu =
+      $(go.Adornment, "Vertical",
+          makeButton("Paste",
+                     function(e, obj) { e.diagram.commandHandler.pasteSelection(e.diagram.lastInput.documentPoint); },
+                     function(o) { return o.diagram.commandHandler.canPasteSelection(); }),
+          makeButton("撤销",
+                     function(e, obj) { e.diagram.commandHandler.undo(); },
+                     function(o) { return o.diagram.commandHandler.canUndo(); }),
+          makeButton("重做",
+                     function(e, obj) { e.diagram.commandHandler.redo(); },
+                     function(o) { return o.diagram.commandHandler.canRedo(); })
+      );
+
+    // load the diagram from JSON data
+    load();
+
+  }
+
+
+
+  // Save the model to / load it from JSON text shown on the page itself, not in a database.
+  function save() {
+    document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+    myDiagram.isModified = false;
+  }
+  function load() {
+    myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+
+    // When copying a node, we need to copy the data that the node is bound to.
+    // This JavaScript object includes properties for the node as a whole, and
+    // four properties that are Arrays holding data for each port.
+    // Those arrays and port data objects need to be copied too.
+    // Thus Model.copiesArrays and Model.copiesArrayObjects both need to be true.
+
+    // Link data includes the names of the to- and from- ports;
+    // so the GraphLinksModel needs to set these property names:
+    // linkFromPortIdProperty and linkToPortIdProperty.
+  }
+
+
+    </script>
+    <script id="selcted_changed">
+	// 定义 选择响应事件
+  $(function(){
+	$("#depart").change(function(){
+		var dep = $(this).val()+"";//强制转换为字符串
+		$("#unit option").hide();//隐藏所有
+		$("#unit option[data-depart='"+dep+"']").show();// 显示对应部门
+		//alert("you change department");
+	});
+
+	$("#unit").change(function(){
+		// 装置选定后，可选的塔范围会缩小
+		var unt = $(this).val()+"";// 所选装置*强制转换为字符串
+		$("#column option").hide();
+		$("#column option[data-unit='"+unt+"']").show();
+
+		//alert("you change unit");
+	});
+
+	$("#column").change(function(){
+		// 塔器选定后，可选的物流范围会缩小
+		var clm = $(this).val()+"";// 所选塔器*强制转换为字符串
+		var stp = $("#streamtype").val();// 物流类型
+		$("#stream option").hide();
+		$("#stream option[data-streamtype='"+stp+"']"+"[data-colum='"+clm+"']").show();
+		//alert("you change unit");
+	});
+
+	$("#streamtype").change(function(){
+		// 塔器选定后，可选的物流范围会缩小
+		var clm = $(this).val()+"";// 所选塔器*强制转换为字符串
+		var stp = $("#streamtype").val();// 物流类型
+		$("#stream option").hide();
+		$("#stream option[data-streamtype='"+stp+"']"+"[data-colum='"+clm+"']").show();
+		//alert("you change unit");
+	});
+
+
+	$("#updateData").click(function (d, fn) {
+	    var dig = myDiagram;
+	    var m = dig.model;
+	    console.log(dig.model.nodeDataArray);
+	    var nodes =m.nodeDataArray;
+	    m.startTransaction("update data info");
+	    for (var i = 0; i < nodes.length; i++)
+	    {
+	        if (nodes[i].info)
+	        {
+	            nodes[i].info +=1;
+	        }
+	        else {
+	            nodes[i].info = "992938";
+	        }
+
+	    }
+	    dig.rebuildParts();
+	    m.commitTransaction("update data info");
+	    //alert('you have updated info');
+	    //dig.updateAllTargetBindings();
+	});
+
+  });
+    </script>
+</head>
+<body onload="init()">
+    <div id="sample">
+        <div style="width:100%; white-space:nowrap;">
+            <div id="myDiagramDiv" style="border: solid 1px gray; height: 720px"></div>
+        </div>
+        <div>
+            <div>
+                <button id="SaveButton" onclick="save()">Save</button>
+                <button onclick="load()">Load</button>
+                Diagram Model saved in JSON format:
+            </div>
+            <div>
+                <button id="updateData">
+                    更新数据
+                </button>
+            </div>
+
+            <textarea id="mySavedModel" style="width:100%;height:250px">
+                { "class": "go.GraphLinksModel",
+                "copiesArrays": true,
+                "copiesArrayObjects": true,
+                "linkFromPortIdProperty": "fromPort",
+                "linkToPortIdProperty": "toPort",
+                "nodeDataArray": [
+                {
+                "key":1, "category":"flowchart","name":"炼油四部-渣油加氢-T2001", "loc":"101 204"
+                },
+                {"category":"dataTag",
+                "key":2,"name":"炼油四部-渣油加氢-T2001", "loc":"10 20",
+                "info":"0.9 t/h",
+                "dataSource":"1-29"
+                }
+                ] ,
+                "linnkDataArray": [
+                ]
+                }
+            </textarea>
+  
+        </div>
+    </div>
+</body>
+</html>
